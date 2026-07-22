@@ -4,9 +4,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Category, Product, Cart
-from .serializers import CategorySerializer, ProductSerializer, CartSerializer
+from .models import Category, Product, Cart, Order, OrderItem
+from .serializers import CategorySerializer, ProductSerializer, CartSerializer, OrderSerializer
 from django.shortcuts import get_object_or_404
+from django.db import transaction
 # Create your views here.
 
 class CategoryAPIView(APIView):
@@ -234,5 +235,106 @@ class RemoveCartItemAPIView(APIView):
             {
                 "status": True,
                 "message": "Item removed successfully."
+            }
+        )
+
+class CheckoutAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        cart_items = Cart.objects.filter(user=request.user)
+
+        if not cart_items.exists():
+
+            return Response(
+                {
+                    "status": False,
+                    "message": "Your cart is empty."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+
+            order = Order.objects.create(
+                user=request.user
+            )
+
+            total = 0
+
+            for item in cart_items:
+
+                OrderItem.objects.create(
+                    order=order,
+                    product=item.product,
+                    quantity=item.quantity,
+                    price=item.product.price,
+                )
+
+                total += item.quantity * item.product.price
+
+            order.total_amount = total
+            order.save()
+
+            cart_items.delete()
+
+        serializer = OrderSerializer(order)
+
+        return Response(
+            {
+                "status": True,
+                "message": "Order placed successfully!",
+                "data": serializer.data
+            }
+        )
+
+class OrderListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        orders = Order.objects.filter(
+            user=request.user
+        ).order_by("-created_at")
+
+        serializer = OrderSerializer(
+            orders,
+            many=True
+        )
+
+        return Response({
+            "status": True,
+            "data": serializer.data
+        })
+
+class OrderDetailAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, order_id):
+
+        try:
+            order = Order.objects.get(
+                id=order_id,
+                user=request.user
+            )
+
+        except Order.DoesNotExist:
+            return Response(
+                {
+                    "status": False,
+                    "message": "Order not found."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = OrderSerializer(order)
+
+        return Response(
+            {
+                "status": True,
+                "data": serializer.data
             }
         )

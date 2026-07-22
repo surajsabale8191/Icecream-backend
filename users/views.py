@@ -144,3 +144,4 @@ class LogoutAPIView(APIView):
                 )
 
         return Response(serializer.errors)
+

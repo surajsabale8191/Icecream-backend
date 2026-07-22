@@ -9,6 +9,9 @@ from .views import (
     IncreaseQuantityAPIView,
     DecreaseQuantityAPIView,
     RemoveCartItemAPIView,
+    CheckoutAPIView,
+    OrderListAPIView,
+    OrderDetailAPIView,
 
 
 
@@ -47,5 +50,19 @@ urlpatterns = [
     RemoveCartItemAPIView.as_view(),
     name="remove_cart_item",),
 
+    path(
+    "orders/checkout/",
+    CheckoutAPIView.as_view(),
+    name="checkout",),  
+
+    path(
+    "orders/",
+    OrderListAPIView.as_view(),
+    name="order_list"),
+
+    path(
+    "orders/<int:order_id>/",
+    OrderDetailAPIView.as_view(),
+    name="order_detail",),
 
 ]
