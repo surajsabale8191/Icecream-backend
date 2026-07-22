@@ -1,9 +1,11 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
-from .models import Category, Product
-from .serializers import CategorySerializer, ProductSerializer
+from .models import Category, Product, Cart
+from .serializers import CategorySerializer, ProductSerializer, CartSerializer
 from django.shortcuts import get_object_or_404
 # Create your views here.
 
@@ -67,3 +69,63 @@ class ProductDetailAPIView(APIView):
             "status": True,
             "data": serializer.data
         })
+
+class AddToCartAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        product_id = request.data.get("product")
+
+        try:
+            product = Product.objects.get(
+                id=product_id,
+                is_available=True
+            )
+        except Product.DoesNotExist:
+
+            return Response(
+                {
+                    "status": False,
+                    "message": "Product not found."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        cart_item, created = Cart.objects.get_or_create(
+            user=request.user,
+            product=product
+        )
+
+        if not created:
+            cart_item.quantity += 1
+            cart_item.save()
+
+        serializer = CartSerializer(cart_item)
+
+        return Response(
+            {
+                "status": True,
+                "message": "Product added to cart.",
+                "data": serializer.data
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+class CartAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        cart_items = Cart.objects.filter(user=request.user)
+
+        serializer = CartSerializer(cart_items, many=True)
+
+        return Response(
+            {
+                "status": True,
+                "data": serializer.data
+            }
+        )
