@@ -6,6 +6,11 @@ from .views import (
     ProductDetailAPIView,
     AddToCartAPIView,
     CartAPIView,
+    IncreaseQuantityAPIView,
+    DecreaseQuantityAPIView,
+    RemoveCartItemAPIView,
+
+
 
 )
 
@@ -16,13 +21,31 @@ urlpatterns = [
     "products/<int:pk>/",
     ProductDetailAPIView.as_view(),
     name="product_detail",),
+
     path(
     "cart/",
     AddToCartAPIView.as_view(),
     name="add_to_cart",),
+
     path(
     "cart/view/",
     CartAPIView.as_view(),
     name="view_cart",),
+
+    path(
+    "cart/increase/<int:cart_id>/",
+    IncreaseQuantityAPIView.as_view(),
+    name="increase_quantity",),
+
+    path(
+    "cart/decrease/<int:cart_id>/",
+    DecreaseQuantityAPIView.as_view(),
+    name="decrease_quantity",),
+
+    path(
+    "cart/remove/<int:cart_id>/",
+    RemoveCartItemAPIView.as_view(),
+    name="remove_cart_item",),
+
 
 ]

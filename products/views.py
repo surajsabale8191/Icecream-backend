@@ -129,3 +129,110 @@ class CartAPIView(APIView):
                 "data": serializer.data
             }
         )
+
+class IncreaseQuantityAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, cart_id):
+
+        try:
+            cart_item = Cart.objects.get(
+                id=cart_id,
+                user=request.user
+            )
+        except Cart.DoesNotExist:
+
+            return Response(
+                {
+                    "status": False,
+                    "message": "Cart item not found."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        cart_item.quantity += 1
+        cart_item.save()
+
+        serializer = CartSerializer(cart_item)
+
+        return Response(
+            {
+                "status": True,
+                "message": "Quantity increased.",
+                "data": serializer.data
+            }
+        )
+
+class DecreaseQuantityAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, cart_id):
+
+        try:
+            cart_item = Cart.objects.get(
+                id=cart_id,
+                user=request.user
+            )
+        except Cart.DoesNotExist:
+
+            return Response(
+                {
+                    "status": False,
+                    "message": "Cart item not found."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if cart_item.quantity > 1:
+            cart_item.quantity -= 1
+            cart_item.save()
+        else:
+            cart_item.delete()
+
+            return Response(
+                {
+                    "status": True,
+                    "message": "Item removed from cart."
+                }
+            )
+
+        serializer = CartSerializer(cart_item)
+
+        return Response(
+            {
+                "status": True,
+                "message": "Quantity decreased.",
+                "data": serializer.data
+            }
+        )
+
+class RemoveCartItemAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, cart_id):
+
+        try:
+            cart_item = Cart.objects.get(
+                id=cart_id,
+                user=request.user
+            )
+        except Cart.DoesNotExist:
+            return Response(
+                {
+                    "status": False,
+                    "message": "Cart item not found."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        cart_item.delete()
+
+        return Response(
+            {
+                "status": True,
+                "message": "Item removed successfully."
+            }
+        )
