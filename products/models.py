@@ -1,5 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
+
 # Create your models here.
 class Category(models.Model):
 
@@ -52,8 +53,8 @@ class Product(models.Model):
 class Cart(models.Model):
 
     user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE
+    settings.AUTH_USER_MODEL,
+    on_delete=models.CASCADE
     )
 
     product = models.ForeignKey(
@@ -89,8 +90,8 @@ class Order(models.Model):
     ]
 
     user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE
+    settings.AUTH_USER_MODEL,
+    on_delete=models.CASCADE
     )
 
     total_amount = models.DecimalField(
